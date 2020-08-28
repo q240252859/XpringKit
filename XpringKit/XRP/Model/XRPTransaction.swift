@@ -11,7 +11,6 @@ public struct XRPTransaction: Equatable {
   public let hash: String
 
   /// The unique address of the account that initiated the transaction.
-  @available(*, deprecated, message: "Please use sourceXAddress, which encodes both the account and sourceTag")
   public let account: Address
 
   /// (Optional) Hash value identifying another transaction. If provided, this transaction is only valid if
@@ -46,12 +45,7 @@ public struct XRPTransaction: Equatable {
   /// (Optional) Arbitrary integer used to identify the reason for this payment or a sender on whose behalf this
   /// transaction is made.
   /// Conventionally, a refund should specify the initial payment's SourceTag as the refund payment's DestinationTag.
-  @available(*, deprecated, message: "Please use sourceXAddress, which encodes both the account and sourceTag")
   public let sourceTag: UInt32?
-
-  /// The unique address and source tag of the sender that initiated the transaction, encoded as an X-address.
-  /// - SeeAlso: "https://xrpaddress.info"
-  public let sourceXAddress: Address?
 
   /// The signature that verifies this transaction as originating from the account it says it is from.
   public let transactionSignature: Data
@@ -67,13 +61,6 @@ public struct XRPTransaction: Equatable {
   /// Use this field to determine how much was delivered, regardless of whether the transaction is a partial payment.
   /// - SeeAlso: "https://xrpl.org/transaction-metadata.html#delivered_amount"
   public let deliveredAmount: String?
-
-  /// A boolean indicating whether this transaction was found on a validated ledger, and not an open or closed ledger.
-  /// - SeeAlso: "https://xrpl.org/ledgers.html#open-closed-and-validated-ledgers"
-  public let validated: Bool
-
-  /// The index of the ledger on which this transaction was found.
-  public let ledgerIndex: UInt32
 
   /// Transaction specific fields, only one of the following will be set.
 

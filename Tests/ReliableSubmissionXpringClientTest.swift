@@ -23,10 +23,6 @@ final class ReliableSubmissionClientTest: XCTestCase {
   )
   let defaultPaymentHistoryValue: [XRPTransaction] = [ .testTransaction, .testTransaction, .testTransaction ]
   let defaultAccountExistsValue = true
-  let defaultGetPaymentValue = XRPTransaction(
-    getTransactionResponse: .testGetTransactionResponse,
-    xrplNetwork: XRPLNetwork.test
-  )
 
   var fakeXRPClient: FakeXRPClient!
   var reliableSubmissionClient: ReliableSubmissionXRPClient!
@@ -41,14 +37,10 @@ final class ReliableSubmissionClientTest: XCTestCase {
       latestValidatedLedgerValue: .success(defaultLatestValidatedLedgerValue),
       rawTransactionStatusValue: .success(defaultRawTransactionStatusValue),
       paymentHistoryValue: .success(defaultPaymentHistoryValue),
-      accountExistsValue: .success(defaultAccountExistsValue),
-      getPaymentValue: .success(defaultGetPaymentValue)
+      accountExistsValue: .success(defaultAccountExistsValue)
     )
 
-    reliableSubmissionClient = ReliableSubmissionXRPClient(
-      decoratedClient: fakeXRPClient,
-      xrplNetwork: fakeXRPClient.network
-    )
+    reliableSubmissionClient = ReliableSubmissionXRPClient(decoratedClient: fakeXRPClient)
   }
 
   func testGetBalance() {
@@ -69,10 +61,7 @@ final class ReliableSubmissionClientTest: XCTestCase {
   func testGetLatestValidatedLedgerSequence() {
     // GIVEN a `ReliableSubmissionClient` decorating a FakeXRPClient WHEN the latest ledger sequence is retrieved
     // THEN the result is returned unaltered.
-    XCTAssertEqual(
-      try? reliableSubmissionClient.getLatestValidatedLedgerSequence(address: .testAddress),
-      defaultLatestValidatedLedgerValue
-    )
+    XCTAssertEqual(try? reliableSubmissionClient.getLatestValidatedLedgerSequence(), defaultLatestValidatedLedgerValue)
   }
 
   func testGetRawTransactionStatus() {

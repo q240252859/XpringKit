@@ -6,26 +6,22 @@ public class DefaultXRPClient {
   /// A margin to pad the current ledger sequence with when submitting transactions.
   private let maxLedgerVersionOffset: UInt32 = 10
 
-  /// The XRPL network this XRPClient is connecting to.
-  internal let network: XRPLNetwork
-
   /// A network client that will make and receive requests.
   private let networkClient: NetworkClient
 
   /// Initialize a new XRPClient.
   ///
   /// - Parameter grpcURL: A url for a remote gRPC service which will handle network requests.
-  public convenience init(grpcURL: String, xrplNetwork: XRPLNetwork) {
+  public convenience init(grpcURL: String) {
     let networkClient = Org_Xrpl_Rpc_V1_XRPLedgerAPIServiceServiceClient(address: grpcURL, secure: false)
-    self.init(networkClient: networkClient, xrplNetwork: xrplNetwork)
+    self.init(networkClient: networkClient)
   }
 
   /// Initialize a new XRPClient.
   ///
   /// - Parameter networkClient: A network client which will make requests.
-  internal init(networkClient: NetworkClient, xrplNetwork: XRPLNetwork) {
+  internal init(networkClient: NetworkClient) {
     self.networkClient = networkClient
-    self.network = xrplNetwork
   }
 
   /// Retrieve the current fee to submit a transaction to the XRP Ledger.
@@ -55,9 +51,6 @@ public class DefaultXRPClient {
     let accountInfoRequest = Org_Xrpl_Rpc_V1_GetAccountInfoRequest.with {
       $0.account = Org_Xrpl_Rpc_V1_AccountAddress.with {
         $0.address = classicAddress
-      }
-      $0.ledger = Org_Xrpl_Rpc_V1_LedgerSpecifier.with {
-        $0.shortcut = Org_Xrpl_Rpc_V1_LedgerSpecifier.Shortcut.validated
       }
     }
     return try networkClient.getAccountInfo(accountInfoRequest)
@@ -127,12 +120,12 @@ extension DefaultXRPClient: XRPClientDecorator {
 
     let accountInfo = try getAccountInfo(for: sourceClassicAddressComponents.classicAddress)
     let fee = try getFee()
-    let lastValidatedLedgerSequence = try getOpenLedgerSequence()
+    let lastValidatedLedgerSequence = try getLatestValidatedLedgerSequence()
 
     var payment = Org_Xrpl_Rpc_V1_Payment.with {
       $0.destination = Org_Xrpl_Rpc_V1_Destination.with {
         $0.value = Org_Xrpl_Rpc_V1_AccountAddress.with {
-          $0.address = destinationAddress
+          $0.address = destinationClassicAddressComponents.classicAddress
         }
       }
 
@@ -142,6 +135,11 @@ extension DefaultXRPClient: XRPClientDecorator {
             $0.drops = amount
           }
         }
+      }
+    }
+    if let destinationTag = destinationClassicAddressComponents.tag {
+      payment.destinationTag = Org_Xrpl_Rpc_V1_DestinationTag.with {
+        $0.value = destinationTag
       }
     }
 
@@ -179,44 +177,14 @@ extension DefaultXRPClient: XRPClientDecorator {
     return [UInt8](submitTransactionResponse.hash).toHex()
   }
 
-  /// Retrieve the open ledger sequence index.
+  /// Retrieve the latest validated ledger sequence on the XRP Ledger.
   ///
   /// - Throws: An error if there was a problem communicating with the XRP Ledger.
-  /// - Returns: The index of the open ledger.
-  private func getOpenLedgerSequence() throws -> UInt32 {
+  /// - Returns: The index of the latest validated ledger.
+  public func getLatestValidatedLedgerSequence() throws -> UInt32 {
     // The fee API response contains the last ledger sequence and a limited subset of RPCs were implemented in gRPC.
     let getFeeResponse = try getRawFee()
     return getFeeResponse.ledgerCurrentIndex
-  }
-
-  /// Retrieve the latest validated ledger sequence on the XRP Ledger.
-  ///
-  /// - Note: This call will throw if the given account does not exist on the ledger at the current time. It is the
-  /// *caller's responsibility* to ensure this invariant is met.
-  /// - Note: The input address *must* be in a classic address form. Inputs are not checked to this internal method.
-  ///
-  /// TODO(keefertaylor): The above requirements are onerous, difficult to reason about and the logic of this method is\
-  /// brittle. Replace this method's implementation when rippled supports a `ledger` RPC via gRPC.
-  ///
-  /// - Parameter address: An address that exists at the current time. The address is unchecked and must be
-  ///   a classic address.
-  /// - Throws: An error if there was a problem communicating with the XRP Ledger.
-  /// - Returns: The index of the latest validated ledger.
-  internal func getLatestValidatedLedgerSequence(address: Address) throws -> UInt32 {
-    // rippled doesn't support a gRPC call that tells us the latest validated ledger sequence. To get around this,
-    // query the account info for an account which will exist, using a shortcut for the latest validated ledger. The
-    // response will contain the ledger index the information was retrieved at.
-    let getAccountInfoRequest = Org_Xrpl_Rpc_V1_GetAccountInfoRequest.with {
-      $0.account = Org_Xrpl_Rpc_V1_AccountAddress.with {
-        $0.address = address
-      }
-      $0.ledger = Org_Xrpl_Rpc_V1_LedgerSpecifier.with {
-        $0.shortcut = Org_Xrpl_Rpc_V1_LedgerSpecifier.Shortcut.validated
-      }
-    }
-
-    let getAccountInfoResponse = try networkClient.getAccountInfo(getAccountInfoRequest)
-    return getAccountInfoResponse.ledgerIndex
   }
 
   /// Retrieve the raw transaction status for the given transaction hash.
@@ -296,11 +264,7 @@ extension DefaultXRPClient: XRPClientDecorator {
       switch transaction.transactionData {
       case .payment:
         // If a payment can't be converted throw an error to prevent returning incomplete data.
-        guard let xrpTransaction = XRPTransaction(
-          getTransactionResponse: transactionResponse,
-          xrplNetwork: self.network
-        )
-        else {
+        guard let xrpTransaction = XRPTransaction(getTransactionResponse: transactionResponse) else {
           throw XRPLedgerError.unknown(
             "Could not convert payment transaction: \(transaction). " +
             "Please file a bug at https://github.com/xpring-eng/xpringkit"
@@ -312,26 +276,5 @@ extension DefaultXRPClient: XRPClientDecorator {
         return nil
       }
     }
-  }
-
-  /// Retrieve the payment transaction corresponding to the given transaction hash.
-  ///
-  /// - Note: This method can return transactions that are not included in a fully validated ledger.
-  ///         See the `validated` field to make this distinction.
-  ///
-  /// - Parameter transactionHash: The hash of the transaction to retrieve.
-  /// - Throws: An RPCError if the transaction hash was invalid.
-  /// - Returns: An XRPTransaction object representing an XRP Ledger transaction.
-  func getPayment(for transactionHash: String) throws -> XRPTransaction? {
-    let transactionHashBytes = try transactionHash.toBytes()
-    let transactionHashData = Data(transactionHashBytes)
-
-    let request = Org_Xrpl_Rpc_V1_GetTransactionRequest.with {
-      $0.hash = transactionHashData
-    }
-
-    let getTransactionResponse = try self.networkClient.getTransaction(request)
-
-    return XRPTransaction(getTransactionResponse: getTransactionResponse, xrplNetwork: self.network)
   }
 }

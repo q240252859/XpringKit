@@ -1,8 +1,5 @@
 /// A decorator for a XRPClient.
-internal protocol XRPClientDecorator {
-  /// The XRPL network this XRPClient is connecting to.
-  var network: XRPLNetwork { get }
-
+public protocol XRPClientDecorator {
   /// Get the balance for the given address.
   ///
   /// - Parameter address: The X-Address to retrieve the balance for.
@@ -32,14 +29,9 @@ internal protocol XRPClientDecorator {
 
   /// Retrieve the latest validated ledger sequence on the XRP Ledger.
   ///
-  /// - Note: This call will throw if the given account does not exist on the ledger at the current time. It is the
-  /// *caller's responsibility* to ensure this invariant is met.
-  /// TODO(keefertaylor): Replace this brittle logic when rippled supports a `ledger` RPC via gRPC.
-  ///
-  /// - Parameter address: An address that exists at the current time.
   /// - Throws: An error if there was a problem communicating with the XRP Ledger.
   /// - Returns: The index of the latest validated ledger.
-  func getLatestValidatedLedgerSequence(address: Address) throws -> UInt32
+  func getLatestValidatedLedgerSequence() throws -> UInt32
 
   /// Retrieve the raw transaction status for the given transaction hash.
   ///
@@ -65,14 +57,4 @@ internal protocol XRPClientDecorator {
   /// - Throws: An error if there was a problem communicating with the XRP Ledger.
   /// - Returns: A boolean if the account is on the blockchain.
   func accountExists(for address: Address) throws -> Bool
-
-  /// Retrieve the payment transaction corresponding to the given transaction hash.
-  ///
-  /// - Note: This method can return transactions that are not included in a fully validated ledger.
-  ///         See the `validated` field to make this distinction.
-  ///
-  /// - Parameter transactionHash: The hash of the transaction to retrieve.
-  /// - Throws: An RPCError if the transaction hash was invalid.
-  /// - Returns: An XRPTransaction object representing an XRP Ledger transaction.
-  func getPayment(for transactionHash: String) throws -> XRPTransaction?
 }

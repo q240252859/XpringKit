@@ -11,8 +11,8 @@ public class XRPClient: XRPClientProtocol {
   ///   - grpcURL: A remote URL for a rippled gRPC service.
   ///   - network: The network this XRPClient is connecting to.
   public init(grpcURL: String, network: XRPLNetwork) {
-    let defaultClient = DefaultXRPClient(grpcURL: grpcURL, xrplNetwork: network)
-    decoratedClient = ReliableSubmissionXRPClient(decoratedClient: defaultClient, xrplNetwork: network)
+    let defaultClient = DefaultXRPClient(grpcURL: grpcURL)
+    decoratedClient = ReliableSubmissionXRPClient(decoratedClient: defaultClient)
 
     self.network = network
   }
@@ -75,17 +75,5 @@ public class XRPClient: XRPClientProtocol {
   /// - Returns: An array of transactions associated with the account.
   public func paymentHistory(for address: Address) throws -> [XRPTransaction] {
     return try decoratedClient.paymentHistory(for: address)
-  }
-
-  /// Retrieve the payment transaction corresponding to the given transaction hash.
-  ///
-  /// - Note: This method can return transactions that are not included in a fully validated ledger.
-  ///         See the `validated` field to make this distinction.
-  ///
-  /// - Parameter transactionHash: The hash of the transaction to retrieve.
-  /// - Throws: An RPCError if the transaction hash was invalid.
-  /// - Returns: An XRPTransaction object representing an XRP Ledger transaction.
-  public func getPayment(for transactionHash: String) throws -> XRPTransaction? {
-    return try decoratedClient.getPayment(for: transactionHash)
   }
 }

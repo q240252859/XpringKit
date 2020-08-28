@@ -17,14 +17,4 @@ extension Org_Xrpl_Rpc_V1_GetTransactionResponse {
       }
     }
   }
-
-  public static let invalidTestGetTransactionResponse = Org_Xrpl_Rpc_V1_GetTransactionResponse.with {
-    $0.transaction = .invalidTestTransactionBadPayment
-    $0.hash = .testHash
-  }
-
-  public static let invalidGetTransactionResponseUnsupported = Org_Xrpl_Rpc_V1_GetTransactionResponse.with {
-    $0.transaction = .invalidTestTransactionUnsupportedType
-    $0.hash = .testHash
-  }
 }

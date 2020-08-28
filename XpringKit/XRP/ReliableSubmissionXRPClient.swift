@@ -3,11 +3,9 @@ import Foundation
 /// A XRPClient which blocks on `send` calls until the transaction has reached a deterministic state.
 public class ReliableSubmissionXRPClient {
   private let decoratedClient: XRPClientDecorator
-  internal let network: XRPLNetwork
 
-  internal init(decoratedClient: XRPClientDecorator, xrplNetwork: XRPLNetwork) {
+  public init(decoratedClient: XRPClientDecorator) {
     self.decoratedClient = decoratedClient
-    self.network = xrplNetwork
   }
 }
 
@@ -20,8 +18,8 @@ extension ReliableSubmissionXRPClient: XRPClientDecorator {
     return try decoratedClient.paymentStatus(for: transactionHash)
   }
 
-  public func getLatestValidatedLedgerSequence(address: Address) throws -> UInt32 {
-    return try decoratedClient.getLatestValidatedLedgerSequence(address: address)
+  public func getLatestValidatedLedgerSequence() throws -> UInt32 {
+    return try decoratedClient.getLatestValidatedLedgerSequence()
   }
 
   public func getRawTransactionStatus(for transactionHash: TransactionHash) throws -> RawTransactionStatus {
@@ -48,31 +46,14 @@ extension ReliableSubmissionXRPClient: XRPClientDecorator {
       )
     }
 
-    // Decode the sending address to a classic address for use in determining the last ledger sequence.
-    // An invariant of `getLatestValidatedLedgerSequence` is that the given input address (1) exists when the method
-    // is called and (2) is in a classic address form.
-    //
-    // The sending address should always exist, except in the case where it is deleted. A deletion would supersede the
-    // transaction in flight, either by:
-    // 1) Consuming the nonce sequence number of the transaction, which would effectively cancel the transaction
-    // 2) Occur after the transaction has settled which is an unlikely enough case that we ignore it.
-    //
-    // This logic is brittle and should be replaced when we have an RPC that can give us this data.
-    guard let sourceAddressComponents = Utils.decode(xAddress: sourceWallet.address) else {
-      throw XRPLedgerError.unknown(
-        "The source wallet reported an address which could not be decoded to a classic address"
-      )
-    }
-    let sourceClassicAddress = sourceAddressComponents.classicAddress
-
     // Retrieve the latest ledger index.
-    var latestLedgerSequence = try getLatestValidatedLedgerSequence(address: sourceClassicAddress)
+    var latestLedgerSequence = try getLatestValidatedLedgerSequence()
 
     // Poll until the transaction is validated, or until the lastLedgerSequence has been passed.
     while latestLedgerSequence <= lastLedgerSequence && !transactionStatus.validated {
       Thread.sleep(forTimeInterval: ledgerCloseTime)
 
-      latestLedgerSequence = try getLatestValidatedLedgerSequence(address: sourceClassicAddress)
+      latestLedgerSequence = try getLatestValidatedLedgerSequence()
       transactionStatus = try getRawTransactionStatus(for: transactionHash)
     }
 
@@ -85,9 +66,5 @@ extension ReliableSubmissionXRPClient: XRPClientDecorator {
 
   public func paymentHistory(for address: Address) throws -> [XRPTransaction] {
     return try decoratedClient.paymentHistory(for: address)
-  }
-
-  func getPayment(for transactionHash: String) throws -> XRPTransaction? {
-    return try decoratedClient.getPayment(for: transactionHash)
   }
 }
