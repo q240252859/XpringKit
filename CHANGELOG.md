@@ -7,27 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## 5.1.0 - 2020-08-17
-
-### Added
-- A new method, `sendWithDetails`, is exposed on the `XRPClient` and `XpringClient`,
-allowing memo data to be attached to the transaction when sending XRP.
-
-- A new method `enableDepositAuth` is added to `XRPClient` which enables Deposit Authorization for the specified XRPL account.
-(See https://xrpl.org/depositauth.html)
-
-## 5.0.1 - 2020-08-01
-
-This release contains updated dependencies for stability and security.
-
-## 5.0.0 - 2020-07-15
-
-### Removed
-- `XRPTransaction.account` and `XRPTransaction.sourceTag` were deprecated for two releases and have been removed.
-   Please use the X-address encoded field `sourceXAddress` instead.
-- `XRPPayment.destination` and `XRPPayment.destinationTag` were deprecated for two releases and have been removed.
-   Please use the X-address encoded field `destinationXAddress` instead.
-
 ### 4.0.0 - 2020-06-25
 
 This new release contains production ready classes for [PayID](https://payid.org).

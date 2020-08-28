@@ -18,24 +18,22 @@ internal extension XRPTransaction {
 
     let hashBytes = [UInt8](getTransactionResponse.hash)
     self.hash = hashBytes.toHex()
+    self.account = transaction.account.value.address
     self.fee = transaction.fee.drops
     self.sequence = transaction.sequence.value
     self.signingPublicKey = transaction.signingPublicKey.value
     self.transactionSignature = transaction.transactionSignature.value
     self.accountTransactionID = transaction.hasAccountTransactionID ? transaction.accountTransactionID.value : nil
-    self.flags = transaction.hasFlags ? PaymentFlag(rawValue: transaction.flags.value) : nil
+    self.flags = transaction.hasFlags ? RippledFlags(rawValue: transaction.flags.value) : nil
     self.lastLedgerSequence = transaction.hasLastLedgerSequence ? transaction.lastLedgerSequence.value : nil
     self.memos = !transaction.memos.isEmpty ? transaction.memos.map { memo in XRPMemo(memo: memo) } : nil
     self.signers = !transaction.signers.isEmpty ? transaction.signers.map { signer in XRPSigner(signer: signer) } : nil
-
-    let account = transaction.account.value.address
-    let sourceTag = transaction.hasSourceTag ? transaction.sourceTag.value : nil
+    self.sourceTag = transaction.hasSourceTag ? transaction.sourceTag.value : nil
     self.sourceXAddress = Utils.encode(
-      classicAddress: account,
-      tag: sourceTag,
+      classicAddress: self.account,
+      tag: self.sourceTag,
       isTest: xrplNetwork == XRPLNetwork.test
     )
-
     switch transaction.transactionData {
     case .payment(let payment):
       guard let paymentFields = XRPPayment(payment: payment, xrplNetwork: xrplNetwork) else {

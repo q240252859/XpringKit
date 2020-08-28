@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "XpringKit"
-  spec.version      = "5.1.0"
+  spec.version      = "4.0.0"
   spec.summary      = "XpringKit provides a Swift based SDK for interacting with Xpring Platform (XRP/ILP)"
 
   spec.description  = "
@@ -12,9 +12,9 @@ Pod::Spec.new do |spec|
   spec.homepage     = "http://xpring.io"
   spec.license      = "MIT"
   spec.author       = { "Xpring Engineering" => "xpring@ripple.com" }
-  spec.source       = { :git => "https://github.com/xpring-eng/XpringKit.git", :tag => "v5.1.0" }
+  spec.source       = { :git => "https://github.com/xpring-eng/XpringKit.git", :tag => "v4.0.0" }
 
-  spec.swift_versions = [5.0]
+  spec.swift_versions = [5.1]
   spec.requires_arc = true
   spec.ios.deployment_target = '12.0'
   spec.osx.deployment_target = '10.10'

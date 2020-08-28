@@ -6,11 +6,11 @@ internal class JavaScriptPayIDUtils {
   /// String constants which refer to named JavaScript resources.
   private enum ResourceNames {
     public enum Classes {
-      public static let payIDUtils = "PayIdUtils"
+      public static let payIDUtils = "PayIDUtils"
     }
 
     public enum Methods {
-      public static let parsePayID = "parsePayId"
+      public static let parsePayID = "parsePayID"
     }
 
     public enum Properties {

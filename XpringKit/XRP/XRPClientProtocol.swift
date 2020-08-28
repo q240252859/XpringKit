@@ -30,15 +30,6 @@ public protocol XRPClientProtocol {
   /// - Returns: A transaction hash for the submitted transaction.
   func send(_ amount: UInt64, to destinationAddress: Address, from sourceWallet: Wallet) throws -> TransactionHash
 
-  /// Send the given amount of XRP from the source wallet to the destination address, allowing for
-  /// additional details to be specified for use with supplementary features of the XRP ledger.
-  ///
-  /// - Parameters:
-  ///   - sendXrpDetails: a SendXRPDetails wrapper object containing details for constructing a transaction.
-  /// - Throws: XRPException If the given inputs were invalid.
-  /// - Returns: A string representing the hash of the submitted transaction.
-  func sendWithDetails(withDetails sendXRPDetails: SendXRPDetails) throws -> TransactionHash
-
   /// Check if an address exists on the XRP Ledger
   ///
   /// - Parameter address: The address to check the existence of.
@@ -66,14 +57,4 @@ public protocol XRPClientProtocol {
   /// - Throws: An RPCError if the transaction hash was invalid.
   /// - Returns: An XRPTransaction object representing an XRP Ledger transaction.
   func getPayment(for transactionHash: String) throws -> XRPTransaction?
-
-  /// Enable Deposit Authorization for this XRPL account.
-  /// - seeAlso: https://xrpl.org/depositauth.html
-  ///
-  /// - Parameter wallet: The wallet associated with the XRPL account enabling Deposit Authorization
-  ///                     and that will sign the request.
-  /// - Throws: An error if there was a problem communicating with the XRP Ledger.
-  /// - Returns: A TransactionResult object that contains the hash of the submitted AccountSet transaction and the
-  ///            final status of the transaction.
-  func enableDepositAuth(for wallet: Wallet) throws -> TransactionResult
 }

@@ -11,8 +11,6 @@ XpringKit provides the following features:
 - Address validation
 - Account balance retrieval
 - Sending XRP payments
-- Retrieval of payment transactions and account payment history
-- Enabling of Deposit Authorization for an XRPL account
 
 ## Installation
 ### Client Side Library
@@ -164,7 +162,7 @@ print(balance) // Logs a balance in drops of XRP
 
 ### Checking Payment Status
 
-An `XRPClient` can check the status of a payment on the XRP Ledger.
+An `XRPClient` can check the status of an payment on the XRP Ledger.
 
 This method can only determine the status of [payment transactions](https://xrpl.org/payment.html) which do not have the partial payment flag ([tfPartialPayment](https://xrpl.org/payment.html#payment-flags)) set.
 
@@ -265,22 +263,6 @@ let transactionHash = try! xrpClient.send(amount, to: destinationAddress, from: 
 
 **Note:** The above example will yield an "Account not found." error because
 the randomly generated wallet contains no XRP.
-
-### Enabling Deposit Authorization
-
-```swift
-
-let remoteURL = "test.xrp.xpring.io:50051" // TestNet URL, use main.xrp.xpring.io:50051 for Mainnet
-let xrpClient = new XRPClient(remoteURL, XRPLNetwork.test)
-
-// Wallet for which to enable Deposit Authorization
-let seedWallet = Wallet("snRiAJGeKCkPVddbjB3zRwwoiYDBm1M")
-
-let transactionResult: TransactionResult = xrpClient.enableDepositAuth(seedWallet)
-let transactionHash: String = transactionResult.hash
-let transactionStatus: TransactionStatus = transactionResult.status
-let validated: Bool = transactionResult.validated
-```
 
 ### Utilities
 #### Address validation
@@ -415,7 +397,7 @@ let grpcUrl = "hermes-grpc-test.xpring.dev" // TestNet Hermes URL
 let ilpClient = ILPClient(grpcURL: grpcUrl)
 ```
 
-#### Retrieving a Balance
+#### Retreiving a Balance
 An `ILPClient` can check the balance of an account on a connector.
 
 ```swift

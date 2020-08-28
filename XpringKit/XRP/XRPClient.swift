@@ -55,17 +55,6 @@ public class XRPClient: XRPClientProtocol {
     return try decoratedClient.send(amount, to: destinationAddress, from: sourceWallet)
   }
 
-  /// Send the given amount of XRP from the source wallet to the destination address, allowing for
-  /// additional details to be specified for use with supplementary features of the XRP ledger.
-  ///
-  /// - Parameters:
-  ///   - sendXrpDetails: a SendXRPDetails wrapper object containing details for constructing a transaction.
-  /// - Throws: XRPException If the given inputs were invalid.
-  /// - Returns: A string representing the hash of the submitted transaction.
-  public func sendWithDetails(withDetails sendXRPDetails: SendXRPDetails) throws -> TransactionHash {
-    return try decoratedClient.sendWithDetails(withDetails: sendXRPDetails)
-  }
-
   /// Check if an address exists on the XRP Ledger
   ///
   /// - Parameter address: The address to check the existence of.
@@ -98,17 +87,5 @@ public class XRPClient: XRPClientProtocol {
   /// - Returns: An XRPTransaction object representing an XRP Ledger transaction.
   public func getPayment(for transactionHash: String) throws -> XRPTransaction? {
     return try decoratedClient.getPayment(for: transactionHash)
-  }
-
-  /// Enable Deposit Authorization for this XRPL account.
-  /// - seeAlso: https://xrpl.org/depositauth.html
-  ///
-  /// - Parameter wallet: The wallet associated with the XRPL account enabling Deposit Authorization
-  ///                     and that will sign the request.
-  /// - Throws: An error if there was a problem communicating with the XRP Ledger.
-  /// - Returns: A TransactionResult object that contains the hash of the submitted AccountSet transaction and the
-  ///            final status of the transaction.
-  public func enableDepositAuth(for wallet: Wallet) throws -> TransactionResult {
-    return try decoratedClient.enableDepositAuth(for: wallet)
   }
 }
